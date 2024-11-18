@@ -24,6 +24,15 @@ void main()
 }
 )";
 
+// Particle system structures
+struct Particle {
+    glm::vec3 position;
+    glm::vec3 velocity;
+    float lifetime;
+};
+
+std::vector<Particle> particles;
+
 GLuint CompileShader(const char* shaderSource, GLenum shaderType) {
     GLuint shader = glCreateShader(shaderType);
     glShaderSource(shader, 1, &shaderSource, nullptr);
@@ -63,6 +72,29 @@ GLuint CreateShaderProgram(const char* vertexSource, const char* fragmentSource)
     glDeleteShader(fragmentShader);
 
     return shaderProgram;
+}
+
+void GenerateParticles() {
+    for (int i = 0; i < 100; ++i) {
+        Particle p;
+        p.position = glm::vec3(0.0f, 0.0f, 0.0f); // start at center
+        p.velocity = glm::vec3(((rand() % 100) / 50.0f) - 1.0f, // random velocity
+            ((rand() % 100) / 50.0f) - 1.0f,
+            0.0f);
+        p.lifetime = 5.0f; // 5 seconds lifespan
+        particles.push_back(p);
+    }
+}
+
+void UpdateParticles(float deltaTime) {
+    for (auto& p : particles) {
+        p.position += p.velocity * deltaTime;
+        p.lifetime -= deltaTime;
+    }
+
+    // Remove expired particles
+    particles.erase(std::remove_if(particles.begin(), particles.end(),
+        [](const Particle& p) { return p.lifetime <= 0.0f; }), particles.end());
 }
 
 void Graphics::Render() {
@@ -121,6 +153,29 @@ void Graphics::Render() {
 
     glBindVertexArray(0);
 
+    // Update particles and render them
+    static float lastTime = glfwGetTime();
+    float currentTime = glfwGetTime();
+    float deltaTime = currentTime - lastTime;
+    lastTime = currentTime;
+
+    UpdateParticles(deltaTime);
+
+    // Render each particle
+    for (const auto& p : particles) {
+        float particleVertices[] = {
+            p.position.x - 0.05f, p.position.y - 0.05f, 0.0f,
+            p.position.x + 0.05f, p.position.y - 0.05f, 0.0f,
+            p.position.x + 0.05f, p.position.y + 0.05f, 0.0f,
+            p.position.x - 0.05f, p.position.y + 0.05f, 0.0f
+        };
+
+        glBindVertexArray(VAO);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(particleVertices), particleVertices); // Update VBO data
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4); // Draw the particle
+    }
+
     // Swap buffers and poll events
     glfwSwapBuffers(window);
     glfwPollEvents();
@@ -154,4 +209,7 @@ void Graphics::Initialize() {
     // Set up OpenGL state
     glEnable(GL_DEPTH_TEST);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+    // Generate initial particles
+    GenerateParticles();
 }

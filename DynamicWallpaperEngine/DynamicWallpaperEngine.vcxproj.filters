@@ -33,6 +33,9 @@
     <ClCompile Include="ParticleSystem.h">
       <Filter>include</Filter>
     </ClCompile>
+    <ClCompile Include="ParticleSystem.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="WallpaperEngine.h">

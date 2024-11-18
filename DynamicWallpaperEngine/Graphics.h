@@ -3,13 +3,16 @@
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <vector>
+#include <glm/glm.hpp>
 
 class Graphics {
 public:
-    GLFWwindow* window;
+    void Initialize();
+    void Render();
 
-    void Initialize();   // Initialize GLFW and OpenGL
-    void Render();       // Render objects and animation
+
+    GLFWwindow* window;
 };
 
 #endif // GRAPHICS_H
